@@ -9,16 +9,18 @@ import {
   deleteProduct,
   createProduct,
 } from '../redux/product/action'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { PRODUCT_CREATE_RESET } from '../redux/product/constants'
 import { FaPlus, FaTrash, FaEdit } from 'react-icons/fa'
+import Paginate from '../components/Paginate'
 
 const ProductList = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const { pageNumber = 1 } = useParams()
 
   const productList = useSelector((state) => state.productList)
-  const { loading, error, products } = productList
+  const { loading, error, products, page, pages } = productList
 
   const userLogin = useSelector((state) => state.userLogin)
   const { userInfo } = userLogin
@@ -48,7 +50,7 @@ const ProductList = () => {
     if (successCreate) {
       navigate(`/admin/product/${createdProduct._id}/edit`)
     } else {
-      dispatch(listProducts())
+      dispatch(listProducts('', pageNumber))
     }
   }, [
     dispatch,
@@ -57,6 +59,7 @@ const ProductList = () => {
     successDelete,
     successCreate,
     createdProduct,
+    pageNumber,
   ])
 
   const deleteHandler = (id) => {
@@ -128,6 +131,7 @@ const ProductList = () => {
               ))}
             </tbody>
           </Table>
+          <Paginate pages={pages} page={page} isAdmin={true} />
         </>
       )}
     </>
