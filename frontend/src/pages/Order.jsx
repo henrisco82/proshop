@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from "axios";
 import { Link } from 'react-router-dom'
 import { Row, Col, ListGroup, Image, Card, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
@@ -20,7 +21,7 @@ const Order = () => {
   const { orderId } = useParams()
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const CLIENT_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID
+  const [clientId, setClientId] = useState("");
 
   const orderDetails = useSelector((state) => state.orderDetails)
   const { order, loading, error } = orderDetails
@@ -46,15 +47,20 @@ const Order = () => {
   }
 
   useEffect(() => {
+    const fetchClientId =  async () => {
+      const { data: clientId } = await axios.get("/api/config/paypal");
+      setClientId(clientId);
+    }
     if (!userInfo) {
       navigate('/login')
     }
-
     if (!order || successPay || successDeliver || order._id !== orderId) {
       dispatch({ type: ORDER_PAY_RESET })
       dispatch({ type: ORDER_DELIVER_RESET })
       dispatch(getOrderDetails(orderId))
     }
+      fetchClientId();
+
   }, [dispatch, navigate, userInfo, orderId, successPay, successDeliver, order])
 
   const successPaymentHandler = (paymentResult) => {
@@ -179,7 +185,7 @@ const Order = () => {
               {!order.isPaid && (
                 <ListGroup.Item>
                   {loadingPay && <Loader />}
-                  <PayPalScriptProvider options={{ "client-id": CLIENT_ID }}>
+                  <PayPalScriptProvider options={{ "client-id": clientId }}>
                       <PayPalButtons
                           createOrder={(data, actions) => {
                               return actions.order.create({
